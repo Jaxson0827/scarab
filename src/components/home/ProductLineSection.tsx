@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
@@ -25,6 +26,7 @@ const PRODUCTS = [
       { label: 'Battery', value: '280', unit: 'Ah' },
       { label: 'Unit Weight', value: '970', unit: 'lbs' },
     ],
+    image: '/images/products/scarab-x5-hero-34-angle.png',
     cta: { label: 'Request a Demo', href: '/contact?intent=demo' },
     flagship: true,
   },
@@ -103,8 +105,8 @@ function ProductCard({ product }: { product: (typeof PRODUCTS)[number] }) {
     <div
       className={[
         'product-card group',
-        'relative flex flex-col',
-        'bg-surface p-8',
+        'relative flex flex-col lg:flex-row',
+        'bg-surface',
         'transition-colors duration-200',
         'hover:bg-surface-2',
         product.flagship ? 'border-t-2 border-blue' : 'border-t border-border',
@@ -120,58 +122,82 @@ function ProductCard({ product }: { product: (typeof PRODUCTS)[number] }) {
           : undefined
       }
     >
-      {/* Tier badge */}
-      <div className="mb-6">
-        <Badge variant={product.tierVariant}>{product.tier}</Badge>
-      </div>
+      {/* Left — content */}
+      <div className="flex flex-col p-8 lg:w-[480px] shrink-0">
+        {/* Tier badge */}
+        <div className="mb-6">
+          <Badge variant={product.tierVariant}>{product.tier}</Badge>
+        </div>
 
-      {/* Product name */}
-      <h3 className="font-display text-[48px] text-white leading-none mb-2">
-        {product.name}
-      </h3>
+        {/* Product name */}
+        <h3 className="font-display text-[48px] text-white leading-none mb-2">
+          {product.name}
+        </h3>
 
-      {/* Capacity */}
-      <p className="font-display text-[22px] text-blue leading-none mb-5">
-        {product.capacity}
-      </p>
+        {/* Capacity */}
+        <p className="font-display text-[22px] text-blue leading-none mb-5">
+          {product.capacity}
+        </p>
 
-      {/* Description */}
-      <p className="font-body text-body-sm text-muted font-light leading-relaxed mb-8 flex-1">
-        {product.description}
-      </p>
+        {/* Description */}
+        <p className="font-body text-body-sm text-muted font-light leading-relaxed mb-8 flex-1">
+          {product.description}
+        </p>
 
-      {/* 2×2 spec grid */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-8 border-t border-border pt-6">
-        {product.specs.map(({ label, value, unit }) => (
-          <div key={label}>
-            <div className="flex items-baseline gap-0.5 leading-none mb-1">
-              <span className="font-display text-[22px] text-white">{value}</span>
-              <span className="font-display text-[14px] text-blue">{unit}</span>
+        {/* 2×2 spec grid */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-8 border-t border-border pt-6">
+          {product.specs.map(({ label, value, unit }) => (
+            <div key={label}>
+              <div className="flex items-baseline gap-0.5 leading-none mb-1">
+                <span className="font-display text-[22px] text-white">{value}</span>
+                <span className="font-display text-[14px] text-blue">{unit}</span>
+              </div>
+              <span className="font-label text-mono-sm uppercase tracking-[0.15em] text-muted">
+                {label}
+              </span>
             </div>
-            <span className="font-label text-mono-sm uppercase tracking-[0.15em] text-muted">
-              {label}
-            </span>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        {/* CTA link */}
+        <Link
+          href={product.cta.href}
+          className={[
+            'inline-flex items-center gap-2',
+            'font-label text-mono-label uppercase tracking-widest',
+            'transition-all duration-200',
+            product.flagship ? 'text-blue hover:text-white' : 'text-muted hover:text-white',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          <span>{product.cta.label}</span>
+          <span className="transition-all duration-200 group-hover:translate-x-1.5">
+            →
+          </span>
+        </Link>
       </div>
 
-      {/* CTA link */}
-      <Link
-        href={product.cta.href}
-        className={[
-          'inline-flex items-center gap-2',
-          'font-label text-mono-label uppercase tracking-widest',
-          'transition-all duration-200',
-          product.flagship ? 'text-blue hover:text-white' : 'text-muted hover:text-white',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        <span>{product.cta.label}</span>
-        <span className="transition-all duration-200 group-hover:translate-x-1.5">
-          →
-        </span>
-      </Link>
+      {/* Right — product image */}
+      {product.image && (
+        <div className="relative flex-1 min-h-[280px] lg:min-h-0 overflow-hidden bg-surface-2">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-contain object-center p-8 transition-transform duration-500 group-hover:scale-[1.03]"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+          {/* Subtle left-edge fade to blend with content panel */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-y-0 left-0 w-16 pointer-events-none"
+            style={{
+              background: 'linear-gradient(to right, var(--color-surface), transparent)',
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }
