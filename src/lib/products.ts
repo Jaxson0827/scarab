@@ -70,7 +70,12 @@ export const PRODUCTS: Product[] = [
       gradient: 45,
       hasWirelessRemote: true,
     },
-    images: [],
+    heroImageUrl: '/images/products/scarab-x5-hero-34-angle.png',
+    images: [
+      '/images/products/scarab-x5-hero-34-angle.png',
+      '/images/products/scarab-x5-front.png',
+      '/images/products/scarab-x5-side-profile.png',
+    ],
     hotspots: [
       {
         position: [0, 1.6, 1.2],
