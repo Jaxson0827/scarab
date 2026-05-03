@@ -47,7 +47,7 @@ export default function ProductDetailClient({ product }: Props) {
           <span className="font-display text-[32px] text-blue leading-none">
             {product.specs.payload.toLocaleString()}
           </span>
-          <span className="font-display text-[18px] text-blue/70 leading-none">kg payload</span>
+          <span className="font-display text-[18px] text-blue/70 leading-none">lbs payload</span>
           <span className="font-display text-[18px] text-muted leading-none mx-2">·</span>
           <span className="font-display text-[24px] text-mild leading-none">
             {product.specs.width}
