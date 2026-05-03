@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ─────────────────────────────────────────────────────── */
+
+@theme {
+  /* Colors — opaque tokens (generate bg-*, text-*, border-* utilities) */
+  --color-black: #080a0d;
+  --color-surface: #0e1218;
+  --color-surface-2: #141820;
+  --color-surface-3: #1a1f28;
+  --color-border: #1e2530;
+  --color-border-2: #262e3a;
+  --color-blue: #00c2ff;
+  --color-blue-dim: rgba(0, 194, 255, 0.12);
+  --color-blue-glow: rgba(0, 194, 255, 0.06);
+  --color-white: #f0f3f7;
+  --color-text: #e8ecf2;
+  --color-mild: #9aa4b2;
+  --color-muted: #6b7585;
+
+  /* Font sizes */
+  --text-display-xl: clamp(80px, 12vw, 160px);
+  --text-display-lg: clamp(56px, 8vw, 100px);
+  --text-display-md: clamp(40px, 5vw, 68px);
+  --text-display-sm: 32px;
+  --text-mono-label: 11px;
+  --text-mono-sm: 10px;
+  --text-body-lg: 16px;
+  --text-body-md: 14px;
+  --text-body-sm: 13px;
+
+  /* Breakpoints */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* Font families reference next/font CSS variables — must use @theme inline */
+@theme inline {
+  --font-display: var(--font-bebas-neue);
+  --font-body: var(--font-dm-sans);
+  --font-label: var(--font-dm-mono);
+}
+
+/* ─── Base Resets ────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto; /* Lenis handles smooth scrolling */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-black);
+  color: var(--color-text);
+  font-family: var(--font-dm-sans, system-ui, sans-serif);
+  font-weight: 300;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Text selection */
+::selection {
+  background-color: var(--color-blue);
+  color: var(--color-black);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-2);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-blue);
+}
+
+/* ─── Layout Utilities ───────────────────────────────────────────────────── */
+
+.container-traxon {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 48px);
+}
+
+.section-padding {
+  padding-block: clamp(64px, 10vw, 120px);
+}
+
+/* Industrial grid background pattern */
+.grid-bg {
+  background-image:
+    linear-gradient(var(--color-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.3;
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* Blue gradient glow blob */
+.blue-glow-blob {
+  background: radial-gradient(
+    ellipse 60% 50% at 70% 35%,
+    rgba(0, 194, 255, 0.05),
+    transparent 70%
+  );
+}
+
+/* Gradient top border line (blue) */
+.gradient-border-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 194, 255, 0.5),
+    transparent
+  );
+}
+
+/* Industrial seam gap between grid items */
+.gap-seam {
+  gap: 2px;
+  background-color: var(--color-black);
+}

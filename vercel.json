@@ -1,0 +1,99 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-DNS-Prefetch-Control",
+          "value": "on"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self), interest-cohort=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.hotjar.com https://script.hotjar.com https://www.googletagmanager.com https://client.crisp.chat; style-src 'self' 'unsafe-inline' https://client.crisp.chat; img-src 'self' data: blob: https://res.cloudinary.com https://cdn.sanity.io https://image.crisp.chat; connect-src 'self' https://*.sentry.io https://api.mapbox.com https://events.mapbox.com https://api.hubapi.com https://in.hotjar.com https://vc.hotjar.io https://ws.hotjar.com https://client.crisp.chat wss://client.relay.crisp.chat; font-src 'self' https://client.crisp.chat; frame-src 'none'; media-src 'self'; worker-src blob:;"
+        }
+      ]
+    },
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/api/og(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=3600, stale-while-revalidate=86400"
+        }
+      ]
+    }
+  ],
+
+  "redirects": [
+    {
+      "source": "/studio",
+      "destination": "/studio/",
+      "permanent": false
+    },
+    {
+      "source": "/products/apex6000",
+      "destination": "/products/scarab-x5",
+      "permanent": true
+    },
+    {
+      "source": "/products/apex-6000",
+      "destination": "/products/scarab-x5",
+      "permanent": true
+    },
+    {
+      "source": "/products/apex3500",
+      "destination": "/products/scarab-x5",
+      "permanent": true
+    },
+    {
+      "source": "/products/apex-3500",
+      "destination": "/products/scarab-x5",
+      "permanent": true
+    },
+    {
+      "source": "/products/apex1500",
+      "destination": "/products/scarab-x5",
+      "permanent": true
+    },
+    {
+      "source": "/products/apex-1500",
+      "destination": "/products/scarab-x5",
+      "permanent": true
+    }
+  ],
+
+  "regions": ["iad1", "sfo1"],
+
+  "crons": []
+}

@@ -1,0 +1,11 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /studio
+Disallow: /api
+
+# Host
+Host: https://traxon.com
+
+# Sitemaps
+Sitemap: https://traxon.com/sitemap.xml
