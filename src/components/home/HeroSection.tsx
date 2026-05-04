@@ -164,8 +164,12 @@ export default function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative w-full overflow-hidden bg-black"
-      style={{ height: '100svh', minHeight: '640px' }}
+      className="relative w-full overflow-hidden"
+      style={{
+        height: '100svh',
+        minHeight: '640px',
+        background: 'radial-gradient(ellipse 130% 110% at 72% 65%, #0b0f14 0%, #080a0d 45%, #060809 100%)',
+      }}
       aria-label="Hero — Traxon Scarab X5"
     >
       {/* Layer 1 — CSS grid pattern */}
@@ -214,7 +218,7 @@ export default function HeroSection() {
           />
           {/* Left-edge fade — machine emerges from darkness */}
           <div
-            className="absolute inset-y-0 left-0 w-[40%] pointer-events-none"
+            className="absolute inset-y-0 left-0 w-[55%] pointer-events-none"
             style={{
               maskImage: 'linear-gradient(to right, black 0%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 100%)',
