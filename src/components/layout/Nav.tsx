@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -76,13 +77,20 @@ export default function Nav() {
         aria-label="Main navigation"
       >
         <div className="container-traxon w-full flex items-center justify-between">
-          {/* Wordmark */}
+          {/* Logo */}
           <Link
             href="/"
-            className="font-display text-[28px] leading-none tracking-wider text-white hover:opacity-90 transition-opacity"
-            aria-label="Traxon — Home"
+            className="flex items-center hover:opacity-90 transition-opacity"
+            aria-label="Scarab by Traxon — Home"
           >
-            TRAX<span className="text-blue">ON</span>
+            <Image
+              src="/website_logo.png"
+              alt="Scarab by Traxon"
+              width={140}
+              height={50}
+              priority
+              className="h-[50px] w-auto"
+            />
           </Link>
 
           {/* Desktop links */}

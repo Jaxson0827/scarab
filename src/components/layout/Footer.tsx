@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import FooterNewsletterForm from './FooterNewsletterForm'
 
@@ -53,10 +54,16 @@ export default function Footer() {
           <div className="flex flex-col gap-6">
             <Link
               href="/"
-              className="font-display text-[28px] leading-none tracking-wider text-white"
-              aria-label="Traxon — Home"
+              className="inline-flex"
+              aria-label="Scarab by Traxon — Home"
             >
-              TRAX<span className="text-blue">ON</span>
+              <Image
+                src="/website_logo.png"
+                alt="Scarab by Traxon"
+                width={160}
+                height={57}
+                className="h-[57px] w-auto"
+              />
             </Link>
             <p className="font-body text-body-sm text-muted leading-relaxed max-w-[220px]">
               American-engineered industrial tracked carriers. Built for the jobs
