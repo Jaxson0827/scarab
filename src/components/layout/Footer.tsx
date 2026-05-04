@@ -58,7 +58,7 @@ export default function Footer() {
               aria-label="Scarab by Traxon — Home"
             >
               <Image
-                src="/website_logo.png"
+                src="/website_logo-removebg-preview.png"
                 alt="Scarab by Traxon"
                 width={160}
                 height={57}

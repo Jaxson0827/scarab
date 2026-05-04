@@ -84,7 +84,7 @@ export default function Nav() {
             aria-label="Scarab by Traxon — Home"
           >
             <Image
-              src="/website_logo.png"
+              src="/website_logo-removebg-preview.png"
               alt="Scarab by Traxon"
               width={140}
               height={50}
