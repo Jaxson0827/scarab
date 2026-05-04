@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
@@ -195,6 +196,33 @@ export default function HeroSection() {
 
       {/* Layer 3 — Animated scan line */}
       <ScanLine />
+
+      {/* Product image — right side, desktop only */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-y-0 right-0 z-[5] hidden md:block"
+        style={{ width: '50%' }}
+      >
+        <div className="relative w-full h-full">
+          <Image
+            src="/images/products/scarab-x5-hero-34-angle.png"
+            alt="Scarab X5 Industrial Tracked Carrier"
+            fill
+            priority
+            className="object-contain object-bottom"
+            sizes="50vw"
+          />
+          {/* Left-edge fade — machine emerges from darkness */}
+          <div
+            className="absolute inset-y-0 left-0 w-[40%] pointer-events-none"
+            style={{
+              maskImage: 'linear-gradient(to right, black 0%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to right, black 0%, transparent 100%)',
+              background: '#080a0d',
+            }}
+          />
+        </div>
+      </div>
 
       {/* Main content + stats row — absolute bottom */}
       <div className="absolute bottom-0 left-0 right-0 z-[10] pb-12">
