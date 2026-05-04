@@ -32,7 +32,7 @@ export default function ScanLine() {
     <div
       ref={lineRef}
       aria-hidden="true"
-      className="pointer-events-none absolute left-0 right-0 z-[2]"
+      className="pointer-events-none absolute left-0 right-0 z-[0]"
       style={{
         height: '2px',
         background:

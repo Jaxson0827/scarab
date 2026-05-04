@@ -10,7 +10,7 @@ import ScanLine from '@/components/animations/ScanLine'
 const STATS = [
   { value: 4000, formatted: '4,000', unit: 'lbs', label: 'Max Payload' },
   { value: 45, formatted: '45', unit: '°', label: 'Max Gradient' },
-  { value: 1000, formatted: '1,000', unit: 'mm', label: 'Track Width' },
+  { value: 39, formatted: '39', unit: 'in', label: 'Track Width' },
 ]
 
 export default function HeroSection() {
@@ -43,7 +43,7 @@ export default function HeroSection() {
 
       if (prefersReducedMotion) {
         gsap.set(allTextEls, { opacity: 1, y: 0, x: 0 })
-        gsap.set(statsContainerRef.current, { opacity: 1, x: 0 })
+        gsap.set(statsContainerRef.current, { opacity: 1, y: 0 })
         statNumberRefs.current.forEach((el, i) => {
           if (el) el.textContent = STATS[i].formatted
         })
@@ -89,15 +89,15 @@ export default function HeroSection() {
           0.75
         )
 
-      // Stats cluster — slides in from right
+      // Stats cluster — fades up below CTAs
       if (statsContainerRef.current) {
         const children = Array.from(statsContainerRef.current.children)
         gsap.fromTo(
           children,
-          { opacity: 0, x: 30 },
+          { opacity: 0, y: 20 },
           {
             opacity: 1,
-            x: 0,
+            y: 0,
             duration: 0.6,
             ease: 'power2.out',
             stagger: 0.1,
@@ -237,7 +237,7 @@ export default function HeroSection() {
               American-Engineered Industrial Carriers
             </p>
 
-            <div className="leading-[0.9] mb-7">
+            <div className="leading-[0.9] mb-7" style={{ position: 'relative', zIndex: 1 }}>
               <div
                 ref={line1Ref}
                 style={{ opacity: 0 }}
@@ -274,7 +274,7 @@ export default function HeroSection() {
             <div
               ref={ctaRef}
               style={{ opacity: 0 }}
-              className="flex flex-col sm:flex-row items-start gap-4"
+              className="flex flex-col sm:flex-row items-start gap-4 mb-8"
             >
               <Link
                 href="/products/scarab-x5"
@@ -289,30 +289,35 @@ export default function HeroSection() {
                 Request a Demo
               </Link>
             </div>
-          </div>
 
-          {/* Stats cluster — desktop only, right side */}
-          <div
-            ref={statsContainerRef}
-            aria-label="Key specifications"
-            className="hidden lg:flex flex-col items-end gap-6 shrink-0 pb-1"
-          >
-            {STATS.map(({ formatted, unit, label }, i) => (
-              <div key={label} style={{ opacity: 0 }} className="flex flex-col items-end">
-                <div className="flex items-baseline gap-1 leading-none">
-                  <span
-                    ref={(el) => { statNumberRefs.current[i] = el }}
-                    className="font-display text-[44px] text-white"
-                  >
-                    0
-                  </span>
-                  <span className="font-display text-[28px] text-blue">{unit}</span>
+            {/* Stats cluster — below CTAs, desktop only, horizontal */}
+            <div
+              ref={statsContainerRef}
+              aria-label="Key specifications"
+              className="hidden lg:flex items-center gap-0"
+            >
+              {STATS.map(({ formatted, unit, label }, i) => (
+                <div key={label} className="flex items-center">
+                  <div style={{ opacity: 0 }} className="flex flex-col pr-6">
+                    <div className="flex items-baseline gap-0.5 leading-none mb-1">
+                      <span
+                        ref={(el) => { statNumberRefs.current[i] = el }}
+                        className="font-display text-[32px] text-white"
+                      >
+                        0
+                      </span>
+                      <span className="font-display text-[20px] text-blue">{unit}</span>
+                    </div>
+                    <span className="font-label text-mono-sm uppercase tracking-[0.2em] text-muted">
+                      {label}
+                    </span>
+                  </div>
+                  {i < STATS.length - 1 && (
+                    <div className="w-px h-8 bg-border mr-6 shrink-0" />
+                  )}
                 </div>
-                <span className="font-label text-mono-sm uppercase tracking-[0.2em] text-muted mt-1.5">
-                  {label}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
