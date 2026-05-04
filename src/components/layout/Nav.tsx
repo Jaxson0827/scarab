@@ -86,10 +86,10 @@ export default function Nav() {
             <Image
               src="/website_logo-removebg-preview.png"
               alt="Scarab by Traxon"
-              width={140}
-              height={50}
+              width={160}
+              height={56}
               priority
-              className="h-[50px] w-auto"
+              className="h-[56px] w-auto object-contain object-left"
             />
           </Link>
 
