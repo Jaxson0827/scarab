@@ -26,91 +26,264 @@ const quoteSchema = z.object({
 
 type QuotePayload = z.infer<typeof quoteSchema>
 
-// ─── HubSpot helpers ──────────────────────────────────────────────────────
+const HUBSPOT_HEADERS = (token: string) => ({
+  Authorization: `Bearer ${token}`,
+  'Content-Type': 'application/json',
+})
 
-async function upsertHubSpotContact(data: QuotePayload) {
-  const token = process.env.HUBSPOT_ACCESS_TOKEN
-  if (!token) return null
+const INDUSTRY_LABELS: Record<QuotePayload['industry'], string> = {
+  construction: 'Construction',
+  mining: 'Mining',
+  utilities: 'Utilities',
+  events: 'Events',
+  other: 'Other',
+}
+
+function formatProductLabel(product: string) {
+  return product
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+function contactProperties(data: QuotePayload) {
+  const properties: Record<string, string> = {
+    email: data.email,
+    firstname: data.firstName,
+    lastname: data.lastName,
+    company: data.company,
+  }
+  if (data.phone) properties.phone = data.phone
+  return properties
+}
+
+async function hubspotFetch(
+  token: string,
+  url: string,
+  init: RequestInit
+): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    headers: {
+      ...HUBSPOT_HEADERS(token),
+      ...(init.headers ?? {}),
+    },
+  })
+}
+
+async function getDefaultPipelineStage(
+  token: string
+): Promise<{ pipeline: string; stage: string }> {
+  const fallback = { pipeline: 'default', stage: 'appointmentscheduled' }
 
   try {
-    const res = await fetch('https://api.hubapi.com/crm/v3/objects/contacts', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        properties: {
-          email: data.email,
-          firstname: data.firstName,
-          lastname: data.lastName,
-          company: data.company,
-          phone: data.phone ?? '',
-          industry: data.industry,
-          hs_lead_status: 'NEW',
-        },
-      }),
+    const res = await hubspotFetch(token, 'https://api.hubapi.com/crm/v3/pipelines/deals', {
+      method: 'GET',
     })
+    if (!res.ok) return fallback
 
-    if (res.status === 409) {
-      // Contact already exists — get existing ID via email
-      const searchRes = await fetch(
-        `https://api.hubapi.com/crm/v3/objects/contacts/${encodeURIComponent(data.email)}?idProperty=email`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (!searchRes.ok) return null
-      const existing = await searchRes.json()
-      return existing.id as string
+    const data = (await res.json()) as {
+      results?: Array<{
+        id: string
+        stages?: Array<{ id: string; displayOrder: number }>
+      }>
     }
 
-    if (!res.ok) return null
-    const contact = await res.json()
-    return contact.id as string
-  } catch (err) {
-    Sentry.captureException(err, { tags: { area: 'hubspot-contact' } })
-    return null
+    const pipeline =
+      data.results?.find((p) => p.id === 'default') ?? data.results?.[0]
+    const stage = pipeline?.stages
+      ?.slice()
+      .sort((a, b) => a.displayOrder - b.displayOrder)[0]
+
+    if (!pipeline?.id || !stage?.id) return fallback
+    return { pipeline: pipeline.id, stage: stage.id }
+  } catch {
+    return fallback
   }
 }
 
-async function createHubSpotDeal(
-  data: QuotePayload,
-  contactId: string | null,
-  reference: string
-) {
-  const token = process.env.HUBSPOT_ACCESS_TOKEN
-  if (!token || !contactId) return
+async function upsertHubSpotContact(
+  token: string,
+  data: QuotePayload
+): Promise<string | null> {
+  const properties = contactProperties(data)
 
-  try {
-    const dealRes = await fetch('https://api.hubapi.com/crm/v3/objects/deals', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        properties: {
-          dealname: `${data.company} — ${data.product.toUpperCase()} [${reference}]`,
-          pipeline: 'default',
-          dealstage: 'appointmentscheduled',
-          amount: '',
-          description: `Payload: ${data.payload}kg | Width: ${data.width}mm | Industry: ${data.industry}${data.accessories?.length ? ` | Accessories: ${data.accessories.join(', ')}` : ''}${data.message ? ` | Message: ${data.message}` : ''}`,
-        },
-      }),
-    })
+  const createRes = await hubspotFetch(token, 'https://api.hubapi.com/crm/v3/objects/contacts', {
+    method: 'POST',
+    body: JSON.stringify({ properties }),
+  })
 
-    if (!dealRes.ok) return
-    const deal = await dealRes.json()
+  if (createRes.ok) {
+    const contact = (await createRes.json()) as { id: string }
+    return contact.id
+  }
 
-    // Associate deal with contact
-    await fetch(
-      `https://api.hubapi.com/crm/v3/objects/deals/${deal.id}/associations/contacts/${contactId}/3`,
+  if (createRes.status === 409) {
+    const updateRes = await hubspotFetch(
+      token,
+      `https://api.hubapi.com/crm/v3/objects/contacts/${encodeURIComponent(data.email)}?idProperty=email`,
       {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
+        method: 'PATCH',
+        body: JSON.stringify({ properties }),
       }
     )
+
+    if (updateRes.ok) {
+      const contact = (await updateRes.json()) as { id: string }
+      return contact.id
+    }
+
+    const errBody = await updateRes.text().catch(() => '')
+    console.error('[HubSpot] contact update failed:', updateRes.status, errBody)
+    Sentry.captureMessage('HubSpot contact update failed', {
+      level: 'error',
+      tags: { area: 'hubspot-contact' },
+      extra: { status: updateRes.status, body: errBody },
+    })
+    return null
+  }
+
+  const errBody = await createRes.text().catch(() => '')
+  console.error('[HubSpot] contact create failed:', createRes.status, errBody)
+  Sentry.captureMessage('HubSpot contact create failed', {
+    level: 'error',
+    tags: { area: 'hubspot-contact' },
+    extra: { status: createRes.status, body: errBody },
+  })
+  return null
+}
+
+function buildDealDescription(data: QuotePayload, reference: string) {
+  const industryLabel = INDUSTRY_LABELS[data.industry]
+  const productLabel = formatProductLabel(data.product)
+  const accessoryNote = data.accessories?.length
+    ? ` | Accessories: ${data.accessories.join(', ')}`
+    : ''
+  const specsNote = `Width: ${data.width}mm | Gradient: ${data.gradient}°${accessoryNote}`
+
+  return [
+    `Reference: ${reference}`,
+    `Industry: ${industryLabel}`,
+    `Payload: ${data.payload} kg`,
+    productLabel,
+    specsNote,
+    data.message ? `Message: ${data.message}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+function buildDealProperties(
+  data: QuotePayload,
+  reference: string,
+  pipeline: string,
+  stage: string,
+  includeCustom = true
+) {
+  const industryLabel = INDUSTRY_LABELS[data.industry]
+  const productLabel = formatProductLabel(data.product)
+
+  const properties: Record<string, string> = {
+    dealname: `${data.company} — Scarab X5 Quote Request`,
+    pipeline,
+    dealstage: stage,
+    description: buildDealDescription(data, reference),
+  }
+
+  if (includeCustom) {
+    properties.quote_industry = industryLabel
+    properties.payload_requirement = `${data.payload} kg`
+    properties.product_interested_in = productLabel
+    properties.quote_notes = data.message ?? ''
+  }
+
+  return properties
+}
+
+async function createHubSpotDeal(
+  token: string,
+  data: QuotePayload,
+  contactId: string,
+  reference: string
+): Promise<void> {
+  const { pipeline, stage } = await getDefaultPipelineStage(token)
+  let dealRes = await hubspotFetch(token, 'https://api.hubapi.com/crm/v3/objects/deals', {
+    method: 'POST',
+    body: JSON.stringify({
+      properties: buildDealProperties(data, reference, pipeline, stage, true),
+    }),
+  })
+
+  if (!dealRes.ok) {
+    dealRes = await hubspotFetch(token, 'https://api.hubapi.com/crm/v3/objects/deals', {
+      method: 'POST',
+      body: JSON.stringify({
+        properties: buildDealProperties(data, reference, pipeline, stage, false),
+      }),
+    })
+  }
+
+  if (!dealRes.ok) {
+    const errBody = await dealRes.text().catch(() => '')
+    console.error('[HubSpot] deal create failed:', dealRes.status, errBody)
+    Sentry.captureMessage('HubSpot deal create failed', {
+      level: 'error',
+      tags: { area: 'hubspot-deal' },
+      extra: { status: dealRes.status, body: errBody },
+    })
+    return
+  }
+
+  const deal = (await dealRes.json()) as { id: string }
+
+  const assocBody = JSON.stringify({
+    inputs: [
+      {
+        from: { id: deal.id },
+        to: { id: contactId },
+        type: 'deal_to_contact',
+      },
+    ],
+  })
+  const assocUrl =
+    'https://api.hubapi.com/crm/v3/associations/deals/contacts/batch/create'
+
+  let assocRes = await hubspotFetch(token, assocUrl, { method: 'PUT', body: assocBody })
+  if (!assocRes.ok) {
+    assocRes = await hubspotFetch(token, assocUrl, { method: 'POST', body: assocBody })
+  }
+
+  if (!assocRes.ok) {
+    const errBody = await assocRes.text().catch(() => '')
+    console.error('[HubSpot] deal-contact association failed:', assocRes.status, errBody)
+    Sentry.captureMessage('HubSpot deal association failed', {
+      level: 'error',
+      tags: { area: 'hubspot-association' },
+      extra: { status: assocRes.status, body: errBody },
+    })
+  }
+}
+
+async function submitToHubSpot(data: QuotePayload, reference: string): Promise<void> {
+  const token = process.env.HUBSPOT_ACCESS_TOKEN
+  const portalId = process.env.HUBSPOT_PORTAL_ID
+
+  if (!token) {
+    console.error('[HubSpot] HUBSPOT_ACCESS_TOKEN is not configured')
+    return
+  }
+
+  if (!portalId) {
+    console.error('[HubSpot] HUBSPOT_PORTAL_ID is not configured')
+  }
+
+  try {
+    const contactId = await upsertHubSpotContact(token, data)
+    if (!contactId) return
+    await createHubSpotDeal(token, data, contactId, reference)
   } catch (err) {
-    Sentry.captureException(err, { tags: { area: 'hubspot-deal' } })
+    console.error('[HubSpot] submission error:', err)
+    Sentry.captureException(err, { tags: { area: 'hubspot-quote' } })
   }
 }
 
@@ -133,22 +306,15 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data
-  const reference = `TRX-${Date.now().toString(36).toUpperCase()}-${randomUUID().slice(0, 4).toUpperCase()}`
+  const reference = randomUUID()
   const submittedAt = new Date().toLocaleString('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'America/Chicago',
   })
 
-  // Run HubSpot and email in parallel — errors are non-fatal
-  const [contactId] = await Promise.all([
-    upsertHubSpotContact(data),
-  ])
+  await submitToHubSpot(data, reference)
 
-  // Create deal (requires contactId)
-  await createHubSpotDeal(data, contactId, reference)
-
-  // Send emails via Resend
   const resendKey = process.env.RESEND_API_KEY
   if (resendKey) {
     const resend = new Resend(resendKey)
@@ -199,7 +365,7 @@ export async function POST(request: NextRequest) {
       resend.emails.send({
         from: `Traxon Leads <${fromEmail}>`,
         to: salesEmail,
-        subject: `New Quote: ${data.company} — ${data.product.toUpperCase()} [${reference}]`,
+        subject: `New Quote: ${data.company} — Scarab X5 [${reference}]`,
         html: internalHtml,
         replyTo: data.email,
       }),
